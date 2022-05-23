@@ -1,3 +1,4 @@
+import LCD1602
 import time
 import smtplib
 import RPi.GPIO as GPIO
@@ -15,9 +16,21 @@ def setup():
     GPIO.setmode(GPIO.BOARD)       # Numbers GPIOs by physical location
     GPIO.setup(ObstaclePin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
     
+    LCD1602.init(0x27, 1)   # init(slave address, background light)
+    LCD1602.write(0, 0, 'Mailbox status:')
+    LCD1602.write(1, 1, 'Launching...')
+    time.sleep(5)
+    
 def sendmail_loop():
+    mailbox_status = 'Mailbox status:'
+    mailbox_full = 'Mail(s) Found.    '
+    mailbox_empty = 'Empty.           '
+    
     while True:
         if (0 == GPIO.input(ObstaclePin)):
+            LCD1602.write(0, 0, mailbox_status)
+            LCD1602.write(1, 1, mailbox_full)
+            
             print("Sending text")
             server = smtplib.SMTP('smtp.gmail.com:587')
             server.starttls()
@@ -32,7 +45,8 @@ def sendmail_loop():
             print("Text sent")
             time.sleep(60*2)
         else:
-            time.sleep(5)
+            LCD1602.write(0, 0, mailbox_status)
+            LCD1602.write(1, 1, mailbox_empty)
             
 def destroy():
     GPIO.cleanup() 
